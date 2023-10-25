@@ -1,0 +1,29 @@
+#!/bin/sh
+#
+# Purpose: Add Cloudflares repository and install cloudflared during VyOS build
+#
+
+# Debian Version
+DEBIAN_VERSION=$(lsb_release -cs)
+
+# GPG Key
+CF_GPG_KEY="/usr/share/keyrings/cloudflare-main.gpg"
+
+# Fetch signing key from Cloudflare.
+curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg -o "${CF_GPG_KEY}"
+
+# Check if cloudflare-main.gpg has been downloaded
+if [ ! -f "${CF_GPG_KEY}" ]; then
+  echo "ERROR: ${CF_GPG_KEY} is missing!"
+  exit
+fi
+
+# Import the fetched signing key from Cloudflare.
+apt-key add "${CF_GPG_KEY}"
+
+# Add Cloudflare repository.
+echo "deb [arch=amd64 signed-by=${CF_GPG_KEY}] https://pkg.cloudflare.com/cloudflared ${DEBIAN_VERSION} main" > /etc/apt/sources.list.d/cloudflared.list
+
+# Install Cloudflared
+apt-get update
+apt-get -y install cloudflared
